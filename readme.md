@@ -1,6 +1,6 @@
 ### PCenterNet
 ---
-This is a project for studing on CenterNet with probability.
+This is a project for study on CenterNet with probability.
 
 ### Features
 ---
