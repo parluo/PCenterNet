@@ -1,8 +1,8 @@
-###PCenterNet
+### PCenterNet
 ---
 This is a project for studing on CenterNet with probability.
 
-###Features
+### Features
 ---
 - Simplify adn rewrite the original centernet codes, including object boxes decoding and labels generation;
 - Organization the detection pipeline with MMDetection;
