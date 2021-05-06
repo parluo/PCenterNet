@@ -1,0 +1,114 @@
+#Config File example
+save_dir: ./model/exp/4chapter/org_dfl8_gflv2-from0-2
+model:
+  arch:
+    name: DLASeg
+    num_layers: 34
+    out_classes: [20, 16, 2]
+    head_conv: 256
+
+    # # 但是名字改变了，就不能加载原预训练权重了
+    # name: GFL 
+    # backbone:
+    #   name: DLA34
+    #   levels: [1,1,1,2,2,1]
+    #   channels: [16, 32, 64, 128, 256, 512]
+    # fpn:
+    #   name: FFN
+    #   channels: [16, 32, 64, 128, 256, 512]
+    #   down_ratio: 4
+    #   last_level: 5
+    # head:
+    #   name: CenterNetHead
+    #   out_classes: [80, 2, 2]
+    #   channels: [16, 32, 64, 128, 256, 512]
+    #   final_kernal: 1
+    #   head_conv: 256
+    #   out_channel: -1
+    #   down_ratio: 4
+    #   loss_hm_qfl_weight: 1.0
+    #   loss_wh_dfl_weight: 0.5
+    #   loss_wh_bbox: 2 
+    #   loss_reg_weight: 1
+
+    #   reg_max: 7
+    #   norm_cfg:
+    #     type: BN
+    #   loss:
+    #     loss_qfl:
+    #       name: QualityFocalLoss
+    #       use_sigmoid: True
+    #       beta: 2.0
+    #       loss_weight: 1.0
+    #     loss_dfl:
+    #       name: DistributionFocalLoss
+    #       loss_weight: 0.25
+    #     loss_bbox:
+    #       name: GIoULoss
+    #       loss_weight: 2.0
+
+class_names: &class_names ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle',
+            'bus', 'car', 'cat', 'chair', 'cow', 'diningtable',
+            'dog', 'horse', 'motorbike', 'pottedplant',
+            'sheep', 'sofa', 'train', 'tvmonitor', 'person']  #Please fill in the category names (not include background category)
+data:
+  train:
+    name: voc
+    rootpath: data/VOCdevkit/VOC2012/ImageSets/Main # voc2012数据集的划分txt存放目录
+    class_names: *class_names
+    output_size: [128, 128]
+    img_path: data/VOCdevkit/VOC2012/JPEGImages  #Please fill in train image path
+    ann_path: data/VOCdevkit/VOC2012/Annotations  #Please fill in train xml path
+    input_size: [512,512] #[w,h]
+    keep_ratio: True
+    pipeline:
+      # perspective: 0.001
+      scale: [0.6, 1.4]
+      stretch: [[0.8, 1.2], [0.8, 1.2]] #[[1, 1], [1, 1]] scale changed
+      rotation: 15
+      # shear: 0
+      translate: 0.2
+      flip: 0.5
+      brightness: 0.2 # + 
+      contrast: [0.6, 1.4] # *
+      saturation: [0.6, 1.4]
+      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+  val:
+    name: voc
+    rootpath: data/VOCdevkit/VOC2012/ImageSets/Main  # voc2012 train.txt val.txt存放目录
+    class_names: *class_names
+    output_size: [128, 128]
+    img_path: data/VOCdevkit/VOC2012/JPEGImages  #Please fill in train image path
+    ann_path: data/VOCdevkit/VOC2012/Annotations  #Please fill in train xml path
+    input_size: [512,512] #[w,h]
+    keep_ratio: True
+    pipeline:
+      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+device:
+  gpu_ids: [0]
+  workers_per_gpu: 12  #12
+  batchsize_per_gpu: 16 # 160
+schedule:
+  # resume: model/exp/4chapter/org_dfl8_gflv2-from0/model_last.pth
+  load_model: model/exp/4chapter/org_dfl8_gflv2-from0/model_best/model_best.pth #model/centernet/ctdet_coco_dla_2x.pth
+  optimizer:
+    name: Adam #  SGD
+    lr: 0.00004 # w 1e-3->3.1loss 然后10epoch loss就从2翘到7,1e-4->17loss # 0.0004 # 0.14 # centernet on coco: 4e-5 但数量11:0.5 5e-4*20=8e-3 batch
+    # momentum: 0.9
+    # weight_decay: 0.0001
+  warmup:
+    name: linear
+    steps: 1000 # 300  120
+    ratio: 0.01
+  total_epochs: 200 #centernet on coco: 160
+  lr_schedule:
+    name: MultiStepLR
+    milestones:  [140] #[100,200] #[150,300,400] #[90,120] #[30, 50, 70, 90] # 0->280 : 1e-4->1e-6 [90,120] # 
+    gamma: 0.1
+  val_intervals: 5 # 10
+evaluator:
+  name: CocoDetectionEvaluator
+  save_key: mAP
+
+log:
+  interval: 10

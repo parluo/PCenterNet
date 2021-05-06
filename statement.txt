@@ -1,0 +1,85 @@
+# 不用：时间: imgloader: 0.00014 net:0.033 backward: 1.80 other:0.002 5563M
+# 自带：时间: imgloader: 0.00016 net: 0.04 backward:2.05 other:0.0007 4590M
+# apex: 时间:imgloader: 0.00013 net: 0.051 backward: 2.1 other: 0.0011 4618M
+
+
+流程：
+5.根据上传速度决定数据集下载  【先下数据集！】
+    - wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar VOC2012
+    - wget http://pjreddie.com/media/files/VOCtrainval_11-May-2012.tar
+    - 似乎有时快有时慢，多试试
+
+
+1.remote服务器
+2.sftp同步文件
+    - 同步模型文件：dla34-ba72cf86.pth 可以自动下就行
+    - 同步模型文件：centernet_2x.pth 手动传
+3.服务器配置python环境
+    - 安装python
+    - pip装pylint
+    - 安装包 requirements.txt
+    - import cv2有问题时： (如果装不了，http not found，得换源）
+        sudo dpkg --configure -a
+        sudo apt-get update
+        sudo apt-get install -y libgl1-mesa-dev
+        
+#  阿里镜像源
+
+deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+
+deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+
+
+4.同步 安装DCN for torch1.5:  git clone https://github.com/MatthewHowe/DCNv2
+    - 如果cpu容器，请切换gpu后在编译DCN
+
+6.装nanodet
+python setup.py develop
+
+7.关于unbuntu更换驱动
+sudo apt-get install software-properties-common
+sudo apt-get install ubuntu-drivers-common
+
+https://blog.csdn.net/hgtjcxy/article/details/89926991
+
+$ sudo add-apt-repository ppa:graphics-drivers/ppa
+$ sudo apt update
+$ ubuntu-drivers devices
+== /sys/devices/pci0000:00/0000:00:01.0/0000:01:00.0 ==
+modalias : pci:v000010DEd00001C03sv00001043sd000085ABbc03sc00i00
+vendor   : NVIDIA Corporation
+model    : GP106 [GeForce GTX 1060 6GB]
+driver   : nvidia-driver-390 - third-party free
+driver   : nvidia-driver-410 - third-party free recommended
+driver   : nvidia-driver-396 - third-party free
+driver   : xserver-xorg-video-nouveau - distro free builtin
+# 或者安装指定驱动(这里挑选自己需要的驱动,然后安装即可,不必卸载之前装过的驱动)
+# 如果要卸载： sudo apt autoremove nvidia-driver-410
+$ sudo apt install nvidia-driver-410
+
+8.多线程下载
+sudo apt install -y axel
+axel -n 50 ...
+
+9.scp上传文件
+scp -P 端口 ./文件 user@ip:/home/...
+
+10. 问题 
+- 参数对不上
+    时不时检查下参数，偶尔误触，结果导致模型结构错了，md
+- 输出框不对
+    是不是没积分
+- hm loss极大
+    是不是focal那里sigmoid
+

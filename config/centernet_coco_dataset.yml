@@ -1,0 +1,70 @@
+#Config File example
+save_dir: ./model/exp/ch_all_1_0.5_0.1(f1_bs8_top2)
+model:
+  arch:
+    name: DLASeg
+    num_layers: 34
+    out_classes: [1, 16, 2]
+    head_conv: 256
+
+class_names: &class_names ['person'] # ['person']  #Please fill in the category names (not include background category)
+data:
+  #  针对crowdhuman数据集手动改了cat_ids, 也即没有要mask类别
+  train:
+    name: centernet_coco
+    class_names: *class_names
+    output_size: [128, 128]
+    img_path: data/crowdhuman/Images   #Please fill in train image path
+    ann_path: data/crowdhuman/annotations_train.json #Please fill in train xml path
+    input_size: [512,512] #[w,h]
+    keep_ratio: True
+    pipeline:
+      # perspective: 0.001
+      scale: [0.6, 1.4]
+      stretch: [[0.8, 1.2], [0.8, 1.2]] #[[1, 1], [1, 1]] scale changed
+      rotation: 15
+      # shear: 0
+      translate: 0.2
+      flip: 0.5
+      # brightness: 0.2 # + 
+      # contrast: [0.6, 1.4] # *
+      # saturation: [0.6, 1.4]
+      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+  val:
+    name: centernet_coco
+    class_names: *class_names
+    output_size: [128, 128]
+    img_path: data/crowdhuman/Images   #Please fill in train image path
+    ann_path: data/crowdhuman/annotations_val.json #Please fill in train xml path
+    input_size: [512,512] #[w,h]
+    keep_ratio: True
+    pipeline:
+      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]] #[[104.04, 121.635, 119.85],[73.695, 69.87, 70.89]] #
+device:
+  gpu_ids: [0]
+  workers_per_gpu: 12  #12
+  batchsize_per_gpu: 8 # 160
+schedule:
+  # resume: model/exp/ch_all_1_0.5_0.1(f1_bs8_top2)/model_last.pth #model/exp/voc_hwdfl8_focal_gflv2/model_last.pth
+  load_model: model/exp/ch_all_1_0.5_0.1(f1_bs8_top2)/model_best/model_best.pth #model/exp/ch_all_1_0.25_0.1(f4_bs16)/model_best/model_best.pth
+  optimizer:
+    name: Adam #  SGD
+    lr: 0.0004 # 0.14
+    # momentum: 0.9
+    # weight_decay: 0.0001
+  warmup:
+    name: linear
+    steps: 160 # ch: 1000 voc 160 # 300  120
+    ratio: 0.1
+  total_epochs: 55 #160
+  lr_schedule:
+    name: MultiStepLR
+    milestones: [30,50] # [10,20] 继续训练yong#[15,25] # 0->280 : 1e-4->1e-6 [20,35,45] / 50
+    gamma: 0.1
+  val_intervals: 1 # 10
+evaluator:
+  name: CocoDetectionEvaluator
+  save_key: mAP
+
+log:
+  interval: 10

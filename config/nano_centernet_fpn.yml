@@ -1,0 +1,103 @@
+
+
+
+#Config File example
+save_dir: model/exp/nanocenternet_suf2_cfpn_0.5_0.1_multihead
+model:
+  arch:
+    # 但是名字改变了，就不能加载原预训练权重了
+    name: GFL 
+    backbone:
+      name: ShuffleNetV2
+      model_size: 1.0x
+      out_stages: [2,3,4]
+      activation: LeakyReLU
+      # name: MobileNetV2
+      # width_mult: 1
+      # out_stages: [1,2,4,6]
+      # last_channel: 320
+    fpn:
+      name: CFPN # shufflenetv2
+      in_channels: [24, 116, 232, 464]
+      out_channels: 116
+
+      # name: CFPN # mobilenetv2
+      # in_channels: [24,32,96,320]
+      # out_channels: 64
+    head:    
+      name: CenterNetHead
+      out_classes: [20,16,2] # classes + reg_whxy*dfl_num + offset_xy = 80 + 4*8 + 2
+      input_channel: 116 # shufflenetv2: 116 mobilenet: 64
+      final_kernal: 1
+      head_conv: 128
+      loss_hm_fl_weight: 1.0
+      loss_wh_dfl_weight: 0.5
+      loss_wh_bbox: 0.1
+      loss_reg_weight: 1
+
+
+class_names: &class_names ['aeroplane', 'bicycle', 'bird', 'boat', 'bottle',
+            'bus', 'car', 'cat', 'chair', 'cow', 'diningtable',
+            'dog', 'horse', 'motorbike', 'pottedplant',
+            'sheep', 'sofa', 'train', 'tvmonitor', 'person'] 
+data:
+  train:
+    name: voc
+    rootpath: data/VOCdevkit/VOC2012/ImageSets/Main # voc2012数据集的划分txt存放目录
+    class_names: *class_names
+    output_size: [128, 128]
+    img_path: data/VOCdevkit/VOC2012/JPEGImages  #Please fill in train image path
+    ann_path: data/VOCdevkit/VOC2012/Annotations  #Please fill in train xml path
+    input_size: [512,512] #[w,h]
+    keep_ratio: True
+    pipeline:
+      # perspective: 0.001
+      scale: [0.6, 1.4]
+      stretch: [[0.8, 1.2], [0.8, 1.2]] #[[1, 1], [1, 1]] scale changed
+      rotation: 15
+      # shear: 0
+      translate: 0.2
+      flip: 0.5
+      # brightness: 0.2 # + 
+      # contrast: [0.6, 1.4] # *
+      # saturation: [0.6, 1.4]
+      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+  val:
+    name: voc
+    rootpath: data/VOCdevkit/VOC2012/ImageSets/Main  # voc2012 train.txt val.txt存放目录
+    class_names: *class_names
+    output_size: [128, 128]
+    img_path: data/VOCdevkit/VOC2012/JPEGImages  #Please fill in train image path
+    ann_path: data/VOCdevkit/VOC2012/Annotations  #Please fill in train xml path
+    input_size: [512,512] #[w,h]
+    keep_ratio: True
+    pipeline:
+      normalize: [[103.53, 116.28, 123.675], [57.375, 57.12, 58.395]]
+device:
+  gpu_ids: [0]
+  workers_per_gpu: 12
+  batchsize_per_gpu: 8
+schedule:
+  # resume: model/exp/nanocenternet_suf2_cfpn_0.5_0.1_multihead/model_last.pth
+  load_model:  model/exp/nanocenternet_suf2_cfpn_0.5_0.1_multihead/model_best/model_best.pth
+  optimizer:
+    name: Adam
+    lr: 0.001 # 0.01 0.005 都太大， 9.2085
+    # momentum: 0.9
+    # weight_decay: 0.0001
+  warmup:
+    name: linear
+    steps: 300
+    ratio: 0.1
+  total_epochs: 450
+  lr_schedule:
+    name: MultiStepLR
+    milestones: [150,300,400] # [100,200,300]
+    gamma: 0.1
+  val_intervals: 5
+evaluator:
+  name: CocoDetectionEvaluator
+  save_key: mAP
+
+log:
+  interval: 10
