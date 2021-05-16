@@ -8,7 +8,7 @@ if __name__ == '__main__':
         name='nanodet',
         version=__version__,
         description='Deep Learning Object Detection Toolbox',
-        url='https://github.com/RangiLyu/nanodet_develop',
+        url='',
         author='RangiLyu',
         author_email='lyuchqi@gmail.com',
         keywords='deep learning',

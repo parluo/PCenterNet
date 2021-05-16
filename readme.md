@@ -2,7 +2,7 @@
 ---
 This is a project for study on CenterNet with probability prediction.  
 The initial code struction comes from [nanodet](github.com/RangiLyu/nanodet) which organized by [MMDetection](github.com/open-mmlab/mmdetection). 
-The [dlaseg.py](github.com/parluo/PCenterNet/blob/master/nanodet/model/arch/dlaseg.py) is the mainly network file, and you only need to change the arch.name in `config/centernet_*_dataset.xml` during training.  
+The [dlaseg.py](github.com/parluo/PCenterNet/blob/master/nanodet/model/arch/dlaseg.py) is the mainly network file, and to use PCenterNet you only need to change the arch.name in `config/centernet_*_dataset.xml` during training.  
 Aternatively, you could choose the `config/nano_centernet*.yml` to design your network with different backbone, FPN and head modules.
 
 ### Features
